@@ -65,6 +65,8 @@ declare module 'qr.js/lib/QRCode' {
     ): void;
     make(): void;
     addData(data: any): void;
+    dataList: Array<{mode: any, getLength(): number, write(buffer: any): void}>;
+    dataCache: any;
     modules: [[boolean]] | null;
   }
   declare module.exports: typeof QRCode;

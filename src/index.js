@@ -8,6 +8,8 @@ const PropTypes = require('prop-types');
 // thus the deep require.
 const QRCodeImpl = require('qr.js/lib/QRCode');
 const ErrorCorrectLevel = require('qr.js/lib/ErrorCorrectLevel');
+const mode = require('qr.js/lib/mode');
+const BitBuffer = require('qr.js/lib/BitBuffer');
 
 // Convert from UTF-16, forcing the use of byte-mode encoding in our QR Code.
 // This allows us to encode Hanji, Kanji, emoji, etc. Ideally we'd do more
@@ -43,7 +45,7 @@ function convertStr(str: string): string {
 }
 
 type QRProps = {
-  value: string,
+  value: string | Uint8Array,
   size: number,
   level: $Keys<typeof ErrorCorrectLevel>,
   bgColor: string,
@@ -63,7 +65,10 @@ const DEFAULT_PROPS = {
 const PROP_TYPES =
   process.env.NODE_ENV !== 'production'
     ? {
-        value: PropTypes.string.isRequired,
+        value: PropTypes.oneOf([
+          PropTypes.string,
+          PropTypes.instanceOf(Uint8Array),
+        ]).isRequired,
         size: PropTypes.number,
         level: PropTypes.oneOf(['L', 'M', 'Q', 'H']),
         bgColor: PropTypes.string,
@@ -131,6 +136,33 @@ const SUPPORTS_PATH2D = (function() {
   return true;
 })();
 
+function makeQRCode(
+  value: string | Uint8Array,
+  level: $Keys<typeof ErrorCorrectLevel>
+): QRCodeImpl {
+  // We'll use type===-1 to force QRCode to automatically pick the best type
+  const qrcode = new QRCodeImpl(-1, ErrorCorrectLevel[level]);
+
+  if (typeof value === 'string') {
+    qrcode.addData(convertStr(value));
+  } else {
+    qrcode.dataList.push({
+      mode: mode.MODE_8BIT_BYTE,
+      getLength(): number {
+        return value.length;
+      },
+      write(buffer: BitBuffer): void {
+        for (let i = 0; i < value.length; i++) {
+          buffer.put(value[i], 8);
+        }
+      },
+    });
+    qrcode.dataCache = null;
+  }
+  qrcode.make();
+  return qrcode;
+}
+
 class QRCodeCanvas extends React.PureComponent<QRProps> {
   _canvas: ?HTMLCanvasElement;
 
@@ -147,10 +179,7 @@ class QRCodeCanvas extends React.PureComponent<QRProps> {
   update() {
     const {value, size, level, bgColor, fgColor, includeMargin} = this.props;
 
-    // We'll use type===-1 to force QRCode to automatically pick the best type
-    const qrcode = new QRCodeImpl(-1, ErrorCorrectLevel[level]);
-    qrcode.addData(convertStr(value));
-    qrcode.make();
+    const qrcode = makeQRCode(value, level);
 
     if (this._canvas != null) {
       const canvas = this._canvas;
@@ -242,10 +271,7 @@ class QRCodeSVG extends React.PureComponent<QRProps> {
       ...otherProps
     } = this.props;
 
-    // We'll use type===-1 to force QRCode to automatically pick the best type
-    const qrcode = new QRCodeImpl(-1, ErrorCorrectLevel[level]);
-    qrcode.addData(convertStr(value));
-    qrcode.make();
+    const qrcode = makeQRCode(value, level);
 
     const cells = qrcode.modules;
     if (cells === null) {
