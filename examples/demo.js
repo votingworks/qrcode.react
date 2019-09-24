@@ -3,11 +3,13 @@
 var QRCode = require('..');
 var React = require('react');
 var ReactDOM = require('react-dom');
+var base64 = require('base64-js');
 
 // TODO: live update demo
 class Demo extends React.Component {
   state = {
     value: 'http://picturesofpeoplescanningqrcodes.tumblr.com/',
+    valueType: 'utf8',
     size: 128,
     fgColor: '#000000',
     bgColor: '#ffffff',
@@ -37,7 +39,11 @@ class Demo extends React.Component {
   }}`
       : '';
     var code = `<QRCode
-  value={"${this.state.value}"}
+  value={${
+    this.state.valueType === 'utf8'
+      ? JSON.stringify(this.state.value)
+      : `Uint8Array.of(${Array.from(this.state.value).join(', ')})`
+  }}
   size={${this.state.size}}
   bgColor={"${this.state.bgColor}"}
   fgColor={"${this.state.fgColor}"}
@@ -121,13 +127,53 @@ class Demo extends React.Component {
         </div>
         <div>
           <label>
+            Value type:
+            <br />
+            <select
+              onChange={(e) => {
+                const newValueType = e.target.value;
+                this.setState((previousState) => {
+                  if (previousState.valueType !== newValueType) {
+                    if (newValueType === 'utf8') {
+                      return {
+                        value: new TextDecoder().decode(previousState.value),
+                        valueType: newValueType,
+                      };
+                    } else {
+                      return {
+                        value: new TextEncoder().encode(previousState.value),
+                        valueType: newValueType,
+                      };
+                    }
+                  }
+                });
+              }}
+              value={this.state.valueType}>
+              <option value="utf8">utf8</option>
+              <option value="base64">base64</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label>
             Value:
             <br />
             <textarea
               rows="6"
               cols="80"
-              onChange={(e) => this.setState({value: e.target.value})}
-              value={this.state.value}
+              onChange={(e) =>
+                this.setState({
+                  value:
+                    this.state.valueType === 'utf8'
+                      ? e.target.value
+                      : base64.toByteArray(e.target.value),
+                })
+              }
+              value={
+                this.state.valueType === 'utf8'
+                  ? this.state.value
+                  : base64.fromByteArray(this.state.value)
+              }
             />
           </label>
         </div>
