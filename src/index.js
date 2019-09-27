@@ -65,7 +65,7 @@ const DEFAULT_PROPS = {
 const PROP_TYPES =
   process.env.NODE_ENV !== 'production'
     ? {
-        value: PropTypes.oneOf([
+        value: PropTypes.oneOfType([
           PropTypes.string,
           PropTypes.instanceOf(Uint8Array),
         ]).isRequired,
