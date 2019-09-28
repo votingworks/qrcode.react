@@ -1,6 +1,6 @@
 {
-  "name": "qrcode.react",
-  "version": "1.0.0",
+  "name": "@votingworks/qrcode.react",
+  "version": "1.0.1",
   "description": "React component to generate QR codes",
   "keywords": [
     "react",
@@ -63,5 +63,8 @@
     "transform": [
       "loose-envify"
     ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
