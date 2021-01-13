@@ -1,6 +1,6 @@
 {
   "name": "@votingworks/qrcode.react",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React component to generate QR codes",
   "keywords": [
     "react",
@@ -34,7 +34,7 @@
     "qr.js": "0.0.0"
   },
   "peerDependencies": {
-    "react": "^15.5.3 || ^16.0.0"
+    "react": "^15.5.3 || ^16.0.0 || ^17.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
